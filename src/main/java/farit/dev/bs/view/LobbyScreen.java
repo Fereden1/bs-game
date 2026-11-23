@@ -1,5 +1,6 @@
 package farit.dev.bs.view;
 
+import farit.dev.bs.network.GameClient;
 import farit.dev.bs.network.GameServer;
 import farit.dev.bs.protocol.Protocol;
 import javafx.application.Platform;
@@ -23,18 +24,20 @@ public class LobbyScreen {
     private final String playerName;
     private final String hostIp;
     private final GameServer server;
+    private final GameClient client;
     private final Runnable onBack;
 
     private ObservableList<String> players;
     private Label info;
 
     public LobbyScreen(Stage stage, boolean host, String playerName, String hostIp,
-                       GameServer server, Runnable onBack) {
+                       GameServer server, GameClient client, Runnable onBack) {
         this.stage = stage;
         this.host = host;
         this.playerName = playerName;
         this.hostIp = hostIp;
         this.server = server;
+        this.client = client;
         this.onBack = onBack;
     }
 
@@ -63,7 +66,7 @@ public class LobbyScreen {
         if (host) {
             status = new Label("сервер слушает");
         } else {
-            status = new Label("ip: " + hostIp);
+            status = new Label("подключен к " + hostIp);
         }
 
         Button btnStart = new Button("Старт");
@@ -77,12 +80,7 @@ public class LobbyScreen {
         });
 
         Button btnBack = new Button("Назад");
-        btnBack.setOnAction(e -> {
-            if (server != null) {
-                server.stop();
-            }
-            onBack.run();
-        });
+        btnBack.setOnAction(e -> goBack());
 
         VBox root = new VBox(12, title, info, list, btnStart, btnBack, status);
         root.setAlignment(Pos.CENTER);
@@ -111,5 +109,16 @@ public class LobbyScreen {
                 info.setText("игроков: " + names.size() + " из " + Protocol.MAX_PLAYERS);
             }
         });
+    }
+
+    private void goBack() {
+        if (client != null) {
+            client.sendLeave();
+            client.disconnect();
+        }
+        if (server != null) {
+            server.stop();
+        }
+        onBack.run();
     }
 }

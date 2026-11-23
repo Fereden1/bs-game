@@ -1,5 +1,6 @@
 package farit.dev.bs;
 
+import farit.dev.bs.network.GameClient;
 import farit.dev.bs.network.GameServer;
 import farit.dev.bs.view.LobbyScreen;
 import javafx.application.Application;
@@ -53,7 +54,7 @@ public class Main extends Application {
             return;
         }
 
-        String ip = null;
+        String ip = "127.0.0.1";
         if (!host) {
             ip = askIp();
             if (ip == null) {
@@ -65,23 +66,34 @@ public class Main extends Application {
         System.out.println("лобби host=" + host);
 
         GameServer server = null;
+        GameClient client = null;
         try {
             if (host) {
                 server = new GameServer(name);
                 server.start();
+            } else {
+                client = new GameClient();
             }
 
-            new LobbyScreen(stage, host, name, ip, server, new Runnable() {
+            new LobbyScreen(stage, host, name, ip, server, client, new Runnable() {
                 @Override
                 public void run() {
                     showMenu();
                 }
             }).show();
+
+            if (client != null) {
+                client.connect(ip, name);
+            }
         } catch (IOException e) {
-            System.out.println("ошибка сервера: " + e.getMessage());
+            System.out.println("ошибка сети: " + e.getMessage());
+            if (client != null) {
+                client.disconnect();
+            }
             if (server != null) {
                 server.stop();
             }
+            showMenu();
             showError(toRussianError(e.getMessage()));
         }
     }
@@ -90,7 +102,10 @@ public class Main extends Application {
         if (message != null && message.contains("Address already in use")) {
             return "Порт 5555 занят";
         }
-        return "Не удалось запустить сервер";
+        if (message != null && message.contains("Connection refused")) {
+            return "Нет лобби. Сначала создайте лобби у хоста.";
+        }
+        return "Ошибка сети";
     }
 
     private String askName() {
