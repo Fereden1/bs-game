@@ -1,6 +1,8 @@
 package farit.dev.bs.view;
 
 import farit.dev.bs.network.GameServer;
+import farit.dev.bs.protocol.Protocol;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -12,6 +14,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 public class LobbyScreen {
 
     private final Stage stage;
@@ -20,6 +24,9 @@ public class LobbyScreen {
     private final String hostIp;
     private final GameServer server;
     private final Runnable onBack;
+
+    private ObservableList<String> players;
+    private Label info;
 
     public LobbyScreen(Stage stage, boolean host, String playerName, String hostIp,
                        GameServer server, Runnable onBack) {
@@ -39,9 +46,9 @@ public class LobbyScreen {
             title = new Label("лобби");
         }
 
-        Label info = new Label("для старта нужно минимум 3");
+        info = new Label("для старта нужно минимум 3");
 
-        ObservableList<String> players = FXCollections.observableArrayList();
+        players = FXCollections.observableArrayList();
         if (host) {
             players.add(playerName + " (хост)");
         } else {
@@ -82,5 +89,27 @@ public class LobbyScreen {
         root.setPadding(new Insets(20));
 
         stage.setScene(new Scene(root, 640, 480));
+
+        if (server != null) {
+            server.setListener(new GameServer.LobbyListener() {
+                @Override
+                public void onLobbyUpdate(List<String> names) {
+                    updatePlayers(names);
+                }
+            });
+        }
+    }
+
+    private void updatePlayers(List<String> names) {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                players.clear();
+                for (int i = 0; i < names.size(); i++) {
+                    players.add(names.get(i));
+                }
+                info.setText("игроков: " + names.size() + " из " + Protocol.MAX_PLAYERS);
+            }
+        });
     }
 }

@@ -14,13 +14,23 @@ import java.util.List;
 
 public class GameServer {
 
+    public interface LobbyListener {
+        void onLobbyUpdate(List<String> names);
+    }
+
     private final String hostName;
     private ServerSocket serverSocket;
     private final List<ClientHandler> clients = new ArrayList<>();
     private volatile boolean running;
+    private LobbyListener listener;
 
     public GameServer(String hostName) {
         this.hostName = hostName;
+    }
+
+    public void setListener(LobbyListener listener) {
+        this.listener = listener;
+        sendLobbyToUi();
     }
 
     public void start() throws IOException {
@@ -116,7 +126,7 @@ public class GameServer {
                 clients.remove(this);
             }
             closeSocket();
-            System.out.println("игроков сейчас: " + (1 + namedCount()));
+            broadcastLobby();
         }
 
         private void handleLine(String line) {
@@ -130,8 +140,15 @@ public class GameServer {
             if (Protocol.JOIN.equals(type)) {
                 name = data;
                 System.out.println("JOIN от " + name + " (хост " + hostName + ")");
+                broadcastLobby();
             } else if (Protocol.LEAVE.equals(type)) {
                 closeSocket();
+            }
+        }
+
+        private void send(String message) {
+            if (out != null) {
+                out.println(message);
             }
         }
 
@@ -144,15 +161,50 @@ public class GameServer {
         }
     }
 
-    private int namedCount() {
-        int n = 0;
+    private List<String> buildNames() {
+        List<String> names = new ArrayList<>();
+        names.add(hostName + " (хост)");
         synchronized (clients) {
             for (int i = 0; i < clients.size(); i++) {
-                if (clients.get(i).name != null) {
-                    n++;
+                ClientHandler c = clients.get(i);
+                if (c.name != null) {
+                    names.add(c.name);
                 }
             }
         }
-        return n;
+        return names;
+    }
+
+    private void broadcastLobby() {
+        List<String> names = buildNames();
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < names.size(); i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append(names.get(i));
+        }
+
+        String msg = Protocol.LOBBY + "|" + sb;
+        System.out.println("рассылка " + msg);
+
+        synchronized (clients) {
+            for (int i = 0; i < clients.size(); i++) {
+                clients.get(i).send(msg);
+            }
+        }
+
+        sendLobbyToUi(names);
+    }
+
+    private void sendLobbyToUi() {
+        sendLobbyToUi(buildNames());
+    }
+
+    private void sendLobbyToUi(List<String> names) {
+        if (listener != null) {
+            listener.onLobbyUpdate(names);
+        }
     }
 }
