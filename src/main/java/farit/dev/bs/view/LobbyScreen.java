@@ -16,12 +16,14 @@ public class LobbyScreen {
     private final Stage stage;
     private final boolean host;
     private final String playerName;
+    private final String hostIp;
     private final Runnable onBack;
 
-    public LobbyScreen(Stage stage, boolean host, String playerName, Runnable onBack) {
+    public LobbyScreen(Stage stage, boolean host, String playerName, String hostIp, Runnable onBack) {
         this.stage = stage;
         this.host = host;
         this.playerName = playerName;
+        this.hostIp = hostIp;
         this.onBack = onBack;
     }
 
@@ -48,9 +50,9 @@ public class LobbyScreen {
 
         Label status;
         if (host) {
-            status = new Label("ждём игроков (сеть пока не подключена)");
+            status = new Label("ждём игроков");
         } else {
-            status = new Label("сеть пока не подключена");
+            status = new Label("ip: " + hostIp);
         }
 
         Button btnStart = new Button("Старт");

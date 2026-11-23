@@ -50,9 +50,18 @@ public class Main extends Application {
             return;
         }
 
-        System.out.println("открыть лобби, хост=" + host);
+        String ip = null;
+        if (!host) {
+            ip = askIp();
+            if (ip == null) {
+                return;
+            }
+            System.out.println("подключаемся к " + ip);
+        }
 
-        new LobbyScreen(stage, host, name, new Runnable() {
+        System.out.println("лобби host=" + host);
+
+        new LobbyScreen(stage, host, name, ip, new Runnable() {
             @Override
             public void run() {
                 showMenu();
@@ -76,6 +85,24 @@ public class Main extends Application {
             return null;
         }
         return name;
+    }
+
+    private String askIp() {
+        TextInputDialog dialog = new TextInputDialog("127.0.0.1");
+        dialog.setTitle("IP");
+        dialog.setHeaderText(null);
+        dialog.setContentText("IP хоста:");
+
+        Optional<String> result = dialog.showAndWait();
+        if (result.isEmpty()) {
+            return null;
+        }
+
+        String ip = result.get().trim();
+        if (ip.isEmpty()) {
+            return null;
+        }
+        return ip;
     }
 
 }
