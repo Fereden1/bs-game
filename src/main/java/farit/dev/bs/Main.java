@@ -67,7 +67,7 @@ public class Main extends Application {
         GameServer server = null;
         try {
             if (host) {
-                server = new GameServer();
+                server = new GameServer(name);
                 server.start();
             }
 
