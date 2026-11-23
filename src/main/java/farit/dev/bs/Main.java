@@ -1,15 +1,18 @@
 package farit.dev.bs;
 
+import farit.dev.bs.network.GameServer;
 import farit.dev.bs.view.LobbyScreen;
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.util.Optional;
 
 public class Main extends Application {
@@ -61,12 +64,33 @@ public class Main extends Application {
 
         System.out.println("лобби host=" + host);
 
-        new LobbyScreen(stage, host, name, ip, new Runnable() {
-            @Override
-            public void run() {
-                showMenu();
+        GameServer server = null;
+        try {
+            if (host) {
+                server = new GameServer();
+                server.start();
             }
-        }).show();
+
+            new LobbyScreen(stage, host, name, ip, server, new Runnable() {
+                @Override
+                public void run() {
+                    showMenu();
+                }
+            }).show();
+        } catch (IOException e) {
+            System.out.println("ошибка сервера: " + e.getMessage());
+            if (server != null) {
+                server.stop();
+            }
+            showError(toRussianError(e.getMessage()));
+        }
+    }
+
+    private String toRussianError(String message) {
+        if (message != null && message.contains("Address already in use")) {
+            return "Порт 5555 занят";
+        }
+        return "Не удалось запустить сервер";
     }
 
     private String askName() {
@@ -103,6 +127,14 @@ public class Main extends Application {
             return null;
         }
         return ip;
+    }
+
+    private void showError(String text) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Ошибка");
+        alert.setHeaderText(null);
+        alert.setContentText(text);
+        alert.showAndWait();
     }
 
 }
