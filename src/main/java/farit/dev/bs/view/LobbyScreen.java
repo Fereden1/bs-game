@@ -29,6 +29,7 @@ public class LobbyScreen {
 
     private ObservableList<String> players;
     private Label info;
+    private Label status;
 
     public LobbyScreen(Stage stage, boolean host, String playerName, String hostIp,
                        GameServer server, GameClient client, Runnable onBack) {
@@ -62,11 +63,10 @@ public class LobbyScreen {
         list.setPrefHeight(180);
         list.setMaxWidth(280);
 
-        Label status;
         if (host) {
             status = new Label("сервер слушает");
         } else {
-            status = new Label("подключен к " + hostIp);
+            status = new Label("сижу на " + hostIp);
         }
 
         Button btnStart = new Button("Старт");
@@ -96,6 +96,25 @@ public class LobbyScreen {
                 }
             });
         }
+
+        if (client != null) {
+            client.setListener(new GameClient.LobbyListener() {
+                @Override
+                public void onLobbyUpdate(List<String> names) {
+                    updatePlayers(names);
+                }
+
+                @Override
+                public void onDisconnected() {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            status.setText("отключило(");
+                        }
+                    });
+                }
+            });
+        }
     }
 
     private void updatePlayers(List<String> names) {
@@ -106,7 +125,7 @@ public class LobbyScreen {
                 for (int i = 0; i < names.size(); i++) {
                     players.add(names.get(i));
                 }
-                info.setText("игроков: " + names.size() + " из " + Protocol.MAX_PLAYERS);
+                info.setText("сейчас " + names.size() + "/" + Protocol.MAX_PLAYERS);
             }
         });
     }
