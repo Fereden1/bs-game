@@ -74,8 +74,10 @@ public class LobbyScreen {
         btnStart.setOnAction(e -> {
             if (players.size() < 3) {
                 status.setText("нужно минимум 3 игрока");
-            } else {
-                status.setText("игра пока не готова");
+                return;
+            }
+            if (server != null) {
+                server.broadcastStart();
             }
         });
 
@@ -94,6 +96,11 @@ public class LobbyScreen {
                 public void onLobbyUpdate(List<String> names) {
                     updatePlayers(names);
                 }
+
+                @Override
+                public void onStart() {
+                    openGame();
+                }
             });
         }
 
@@ -102,6 +109,11 @@ public class LobbyScreen {
                 @Override
                 public void onLobbyUpdate(List<String> names) {
                     updatePlayers(names);
+                }
+
+                @Override
+                public void onStart() {
+                    openGame();
                 }
 
                 @Override
@@ -126,6 +138,21 @@ public class LobbyScreen {
                     players.add(names.get(i));
                 }
                 info.setText("сейчас " + names.size() + "/" + Protocol.MAX_PLAYERS);
+            }
+        });
+    }
+
+    private void openGame() {
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("открываем игру");
+                new GameScreen(stage, playerName, new Runnable() {
+                    @Override
+                    public void run() {
+                        goBack();
+                    }
+                }).show();
             }
         });
     }

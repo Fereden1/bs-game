@@ -16,6 +16,8 @@ public class GameClient {
     public interface LobbyListener {
         void onLobbyUpdate(List<String> names);
 
+        void onStart();
+
         void onDisconnected();
     }
 
@@ -58,6 +60,11 @@ public class GameClient {
                 System.out.println("пришло: " + line);
                 if (line.startsWith(Protocol.LOBBY)) {
                     parseLobby(line);
+                } else if (line.startsWith(Protocol.START)) {
+                    System.out.println("старт");
+                    if (listener != null) {
+                        listener.onStart();
+                    }
                 }
             }
         } catch (IOException e) {

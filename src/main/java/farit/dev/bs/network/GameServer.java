@@ -16,6 +16,8 @@ public class GameServer {
 
     public interface LobbyListener {
         void onLobbyUpdate(List<String> names);
+
+        void onStart();
     }
 
     private final String hostName;
@@ -205,6 +207,19 @@ public class GameServer {
     private void sendLobbyToUi(List<String> names) {
         if (listener != null) {
             listener.onLobbyUpdate(names);
+        }
+    }
+
+    public void broadcastStart() {
+        String msg = Protocol.START;
+        System.out.println("старт игры");
+        synchronized (clients) {
+            for (int i = 0; i < clients.size(); i++) {
+                clients.get(i).send(msg);
+            }
+        }
+        if (listener != null) {
+            listener.onStart();
         }
     }
 }

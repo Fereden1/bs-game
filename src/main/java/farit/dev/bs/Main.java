@@ -94,11 +94,11 @@ public class Main extends Application {
                 server.stop();
             }
             showMenu();
-            showError(toRussianError(e.getMessage()));
+            showError(errorText(e.getMessage()));
         }
     }
 
-    private String toRussianError(String message) {
+    private String errorText(String message) {
         if (message != null && message.contains("Address already in use")) {
             return "Порт 5555 занят";
         }
