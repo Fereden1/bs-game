@@ -15,6 +15,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class LobbyScreen {
@@ -147,7 +148,8 @@ public class LobbyScreen {
             @Override
             public void run() {
                 System.out.println("открываем игру");
-                new GameScreen(stage, playerName, new Runnable() {
+                List<String> names = new ArrayList<>(players);
+                new GameScreen(stage, playerName, names, new Runnable() {
                     @Override
                     public void run() {
                         goBack();
